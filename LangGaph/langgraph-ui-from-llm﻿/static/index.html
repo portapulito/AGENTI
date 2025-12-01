@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generative UI Python Demo – Web</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            background-color: #f0f2f5;
+        }
+
+        .sidebar {
+            width: 350px;
+            background: white;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        iframe {
+            flex: 1;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        .loading {
+            color: #666;
+            font-size: 0.9rem;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar">
+        <div>
+            <h1>Generative UI Demo</h1>
+            <p style="font-size: 0.9rem; color: #666;">Describe the UI you want to generate.</p>
+        </div>
+
+        <textarea id="prompt"
+            placeholder="e.g., A dashboard for a fitness app with daily stats and a workout list..."></textarea>
+
+        <button id="generateBtn">Generate UI</button>
+        <div id="loading" class="loading">Generating... please wait...</div>
+    </div>
+
+    <div class="main-content">
+        <iframe id="preview" title="Preview"></iframe>
+    </div>
+
+    <script>
+        const generateBtn = document.getElementById('generateBtn');
+        const promptInput = document.getElementById('prompt');
+        const previewFrame = document.getElementById('preview');
+        const loadingIndicator = document.getElementById('loading');
+
+        generateBtn.addEventListener('click', async () => {
+            const description = promptInput.value.trim();
+            if (!description) return;
+
+            // UI State: Loading
+            generateBtn.disabled = true;
+            loadingIndicator.style.display = 'block';
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ description })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                // Update iframe
+                previewFrame.srcdoc = data.html;
+
+            } catch (error) {
+                console.error('Generation failed:', error);
+                alert('Failed to generate UI. See console for details.');
+            } finally {
+                // UI State: Ready
+                generateBtn.disabled = false;
+                loadingIndicator.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+
+</html>
